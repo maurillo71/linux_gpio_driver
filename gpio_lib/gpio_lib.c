@@ -63,9 +63,9 @@ int32_t control_device(ACCEPTED_OPERATIONS operation,uint32_t address,uint32_t v
   io.read_value=0;
   switch(operation)
     {
-    case READ_OPERATION:
-      ioctl(device_status,_IOCTL_WRITE,&io);break;
     case WRITE_OPERATION:
+      ioctl(device_status,_IOCTL_WRITE,&io);break;
+    case READ_OPERATION:
       ioctl(device_status,_IOCTL_READ,&io);break;
     default:break;
     }
