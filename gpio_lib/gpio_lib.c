@@ -36,96 +36,96 @@ extern BOOL init_device()
 		device_status = 0;
 		return FALSE;
 	}
-	bcm2835_gpio = (uint32_t*)BCM2835_GPIO_BASE;
+	bcm2835_gpio = (uint32_t*) GPIO_BASE;
 	return TRUE;
 }
 
 extern BOOL close_device()
 {
-  if(device_status==0)
-    {
-      return FALSE;
-    }
-  close(device_status);
-  device_status=0;
-  bcm2835_gpio=NULL;
-  return TRUE;
+	if (device_status == 0)
+	{
+		return FALSE;
+	}
+	close(device_status);
+	device_status = 0;
+	bcm2835_gpio = NULL;
+	return TRUE;
 }
 
-int32_t control_device(ACCEPTED_OPERATIONS operation,uint32_t address,uint32_t value)
+int32_t control_device(ACCEPTED_OPERATIONS operation, uint32_t address,
+        uint32_t value)
 {
-  if(device_status==0)
-    return -1;
-  gpio_ioctl io;
+	if (device_status == 0) return -1;
+	gpio_ioctl io;
 
-  io.address=address;
-  io. write_value=value;
-  io.read_value=0;
-  switch(operation)
-    {
-    case WRITE_OPERATION:
-      ioctl(device_status,_IOCTL_WRITE,&io);break;
-    case READ_OPERATION:
-      ioctl(device_status,_IOCTL_READ,&io);break;
-    default:break;
-    }
-  return io.read_value;
-
-}
-
-extern BOOL set_pin(uint8_t pin,uint8_t value)
-{
-  if(pin<0 || pin>32)
-    return FALSE;
-  volatile uint32_t *pin_address;
-  if(value)
-    {
-      pin_address=bcm2835_gpio+BCM2835_GPSET0/4+pin/32;
-      uint8_t shift=pin%32;
-      if(control_device(WRITE_OPERATION,&pin_address,(1<<shift))==-1)
-	return FALSE;
-    }
-  else
-    {
-      pin_address=bcm2835_gpio+BCM2835_GPCLR0/4+pin/32;
-      uint8_t shift=pin%32;
-      if(control_device(WRITE_OPERATION,&pin_address,(1<<shift))==-1)
-	return FALSE;
-    }
-  return TRUE;
+	io.address = address;
+	io.write_value = value;
+	io.read_value = 0;
+	switch (operation)
+	{
+		case WRITE_OPERATION:
+			ioctl(device_status, _IOCTL_WRITE, &io);
+			break;
+		case READ_OPERATION:
+			ioctl(device_status, _IOCTL_READ, &io);
+			break;
+		default:
+			break;
+	}
+	return io.read_value;
 
 }
 
-extern uint8_t get_pin(uint8_t pin)
+extern BOOL set_pin_input(uint8_t pin)
 {
-  if(pin<0 || pin>32)
-    return -1;
-  volatile uint32_t *pin_address=bcm2835_gpio+BCM2835_GPLEV0/4+pin/32;
-  uint8_t shift=pin%32;
-  uint32_t value=control_device(READ_OPERATION,&pin_address,0);
-  if(value==-1)
-    {
-      return -1;
-    }
-  return (value & (1 << shift)) ? HIGH : LOW;
+	if (pin < 0 || pin > 32) return FALSE;
+	return (WRITE_BIT(GPSEL_REG(pin),SHIFTED_VALUE(pin,LOW)) == -1) ?
+	        FALSE : TRUE;
+}
+
+extern BOOL set_pin_output(uint8_t pin)
+{
+	if (pin < 0 || pin > 32) return FALSE;
+	return (WRITE_BIT(GPSEL_REG(pin),SHIFTED_VALUE(pin,HIGH)) == -1) ?
+	        FALSE : TRUE;
+}
+
+extern BOOL send_bit(uint8_t pin, uint8_t value)
+{
+	if (pin < 0 || pin > 32) return FALSE;
+
+	if (value)
+		return (WRITE_BIT(GPSET_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?
+		        FALSE : TRUE;
+	else
+		return (WRITE_BIT(GPCLR_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?
+		        FALSE : TRUE;
 
 }
 
-extern BOOL write_data(uint8_t pin,uint32_t value)
+extern uint8_t receive_bit(uint8_t pin)
 {
-  if(pin<0 || pin>32)
-    return FALSE;
-  volatile uint32_t *pin_address=bcm2835_gpio+BCM2835_GPSET0/4+pin/32;
-  if(control_device(WRITE_OPERATION,&pin_address,value)==-1)
-	return FALSE;
-  return TRUE;
+	if (pin < 0 || pin > 32) return -1;
+
+
+	uint32_t value = READ_BIT(GPLEV_REG(pin));
+	if (value == -1)
+	{
+		return -1;
+	}
+	return SHIFTED_VALUE(pin,value);
+
+}
+
+extern BOOL write_data(uint8_t pin, uint32_t value)
+{
+	if (pin < 0 || pin > 32) return FALSE;
+	return (WRITE_BIT(GPSET_REG(pin),value) == -1) ? FALSE : TRUE;
 }
 
 extern uint32_t read_data(uint8_t pin)
 {
-  if(pin<0 || pin>32)
-    return -1;
-  volatile uint32_t *pin_address=bcm2835_gpio+BCM2835_GPLEV0/4+pin/32;
-  return control_device(READ_OPERATION,&pin_address,0);
-  
+	if (pin < 0 || pin > 32) return -1;
+	return READ_BIT(GPLEV_REG(pin));
+
 }
