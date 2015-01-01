@@ -16,8 +16,15 @@ typedef enum
 
 typedef enum
 {
-	READ_OPERATION = 0, WRITE_OPERATION
+	READ_OPERATION = 0, 
+	WRITE_OPERATION
 } ACCEPTED_OPERATIONS;
+
+typedef enum
+  {
+    INPUT_MODE=0x00,
+    OUTPUT_MODE=0x01
+  }PIN_MODE;
 
 typedef struct _gpio_ioctl_parameters
 {
@@ -25,6 +32,8 @@ typedef struct _gpio_ioctl_parameters
 	unsigned write_value;
 	unsigned read_value;
 } gpio_ioctl;
+
+
 
 #define _IOCTL_MAGIC 'K'
 #define _IOCTL_WRITE _IOW(_IOCTL_MAGIC,1,gpio_ioctl*)
@@ -67,14 +76,15 @@ typedef struct _gpio_ioctl_parameters
 #define GPPUDCLK1                    0x009c ///< GPIO Pin Pull-up/down Enable Clock 1
 int8_t device_status;
 
-volatile uint32_t *bcm2835_gpio = NULL;
+BOOL debugging=FALSE;
 
 int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 
 #define GPSET_REG(P)				(GPSET0+((GPSET1-GPSET0)*((P)/32)))
 #define GPCLR_REG(P)				(GPCLR0+((GPCLR1-GPCLR0)*((P)/32)))
-#define GPSEL_REG(P)	(GPFSEL0 + ((GPFSEL1 - GPFSEL0) * ((P) / 10)))
+#define GPSEL_REG(P)	                        (GPFSEL0 + ((GPFSEL1 - GPFSEL0) * ((P) / 10)))
 #define SHIFTED_VALUE(P,V) 	((V)?(1<<((P)%32)):0)
+#define SHIFTED_SELECT_VALUE(P,V) ((V)<<(((P)%10)*3))
 
 #define READ_BIT(A)		control_device(READ_OPERATION,(GPIO_BASE | (A)),0)
 #define	WRITE_BIT(A,V)	control_device(WRITE_OPERATION,(GPIO_BASE| (A)),V)
@@ -85,14 +95,12 @@ int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 extern "C"
 {
 #endif
-
+extern void enable_debugging(BOOL state);
 extern BOOL init_device();
 
 extern BOOL close_device();
 
-extern BOOL set_pin_input(uint8_t pin);
-
-extern BOOL set_pin_output(uint8_t pin);
+extern BOOL set_pin_mode(uint8_t pin,PIN_MODE mode);
 
 extern BOOL send_bit(uint8_t pin, uint8_t value);
 

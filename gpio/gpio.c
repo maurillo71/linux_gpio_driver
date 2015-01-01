@@ -7,6 +7,7 @@
 #include <linux/uaccess.h>
 #include <linux/device.h>
 #include <linux/string.h>
+#include <asm/barrier.h>
 #include "gpio.h"
 /*
 ====================================
@@ -84,17 +85,17 @@ static long device_ioctl(struct file *file,unsigned int ioctl_num,unsigned long 
     {
     case _IOCTL_WRITE:
       {
-	//delay in ARM NOP will be added
+	wmb();
 	driver_info("\t%s:IOCTL Write:0x%08X 0x%08X!\n",DEVICE_NAME,ioctl_buffer.address,ioctl_buffer.write_value);
 	p_memory=(unsigned *)ioctl_buffer.address;
 	*p_memory=ioctl_buffer.write_value;
-	//delay in ARM NOP will be added
+
       }
       break;
     case _IOCTL_READ:
       {
 	driver_info("\t%s:IOCTL Read:0x%08X 0x%08X!\n",DEVICE_NAME,ioctl_buffer.address,ioctl_buffer.write_value);
-	//delay in ARM NOP will be added
+	rmb();
 	p_memory=(unsigned *)ioctl_buffer.address;
 	ioctl_buffer.read_value=*p_memory;
 	var_to_user=TRUE;

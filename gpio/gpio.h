@@ -38,6 +38,10 @@ DRIVER's DEBUGGING MACROS
 
 #endif
 
+#define ARM_DATA_MEM_BARRIER  __asm__ __volatile__ ("mcr p15, 0, r0, c7, c10, 5" : : : "memory")
+
+
+
 /*
 ====================================
 DRIVER's STATUS

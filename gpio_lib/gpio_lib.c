@@ -15,6 +15,14 @@
 #include <stdint.h>
 #include "gpio_lib.h"
 
+extern void enable_debugging(BOOL state)
+{
+  if(state==debugging)
+    return;//no need to change if new state is same with the old one
+  else
+    debugging=state;
+}
+
 extern BOOL init_device()
 {
 	if (device_status != 0)
@@ -36,7 +44,6 @@ extern BOOL init_device()
 		device_status = 0;
 		return FALSE;
 	}
-	bcm2835_gpio = (uint32_t*) GPIO_BASE;
 	return TRUE;
 }
 
@@ -48,7 +55,7 @@ extern BOOL close_device()
 	}
 	close(device_status);
 	device_status = 0;
-	bcm2835_gpio = NULL;
+
 	return TRUE;
 }
 
@@ -76,56 +83,83 @@ int32_t control_device(ACCEPTED_OPERATIONS operation, uint32_t address,
 
 }
 
-extern BOOL set_pin_input(uint8_t pin)
+extern BOOL set_pin_mode(uint8_t pin,PIN_MODE mode)
 {
-	if (pin < 0 || pin > 32) return FALSE;
-	return (WRITE_BIT(GPSEL_REG(pin),SHIFTED_VALUE(pin,LOW)) == -1) ?
-	        FALSE : TRUE;
-}
+  if(debugging==TRUE)
+    {
+      if (pin < 0 || pin > 32) return FALSE;
+      printf("Setting mode for pin at address 0x%08X with value:0x%08X...\n",GPSEL_REG(pin),SHIFTED_SELECT_VALUE(pin,mode));
+      return TRUE;
+    }
 
-extern BOOL set_pin_output(uint8_t pin)
-{
-	if (pin < 0 || pin > 32) return FALSE;
-	return (WRITE_BIT(GPSEL_REG(pin),SHIFTED_VALUE(pin,HIGH)) == -1) ?
-	        FALSE : TRUE;
+  if (pin < 0 || pin > 32) return FALSE;
+  return (WRITE_BIT(GPSEL_REG(pin),SHIFTED_SELECT_VALUE(pin,mode)) == -1) ?FALSE : TRUE;
+    
 }
 
 extern BOOL send_bit(uint8_t pin, uint8_t value)
 {
-	if (pin < 0 || pin > 32) return FALSE;
+  if(debugging==TRUE)
+    {  
+      if (pin < 0 || pin > 32) return FALSE;
+      if(value)
+	printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
+      else
+	printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
+      return TRUE;
+    }
 
-	if (value)
-		return (WRITE_BIT(GPSET_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?
-		        FALSE : TRUE;
-	else
-		return (WRITE_BIT(GPCLR_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?
-		        FALSE : TRUE;
-
+  if (pin < 0 || pin > 32) return FALSE;
+  
+  if (value)
+    return (WRITE_BIT(GPSET_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?FALSE : TRUE;
+  else
+    return (WRITE_BIT(GPCLR_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?FALSE : TRUE;
+  
 }
 
 extern uint8_t receive_bit(uint8_t pin)
 {
-	if (pin < 0 || pin > 32) return -1;
+  if(debugging==TRUE)
+    {
+      if (pin < 0 || pin > 32) return FALSE;
+      printf("Receiving bit from pin at address:0x%08X...\n",GPLEV_REG(pin));
+      return TRUE;
+    }
 
 
-	uint32_t value = READ_BIT(GPLEV_REG(pin));
-	if (value == -1)
-	{
-		return -1;
-	}
-	return SHIFTED_VALUE(pin,value);
+
+  if (pin < 0 || pin > 32) return -1;
+  uint32_t value = READ_BIT(GPLEV_REG(pin));
+  if (value == -1)
+    {
+      return -1;
+    }
+  return SHIFTED_VALUE(pin,value);
 
 }
 
 extern BOOL write_data(uint8_t pin, uint32_t value)
 {
-	if (pin < 0 || pin > 32) return FALSE;
-	return (WRITE_BIT(GPSET_REG(pin),value) == -1) ? FALSE : TRUE;
+  if(debugging==TRUE)
+    {
+      if (pin < 0 || pin > 32) return FALSE;
+      printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
+      return TRUE;
+    }
+  if (pin < 0 || pin > 32) return FALSE;
+  return (WRITE_BIT(GPSET_REG(pin),value) == -1) ? FALSE : TRUE;
 }
 
 extern uint32_t read_data(uint8_t pin)
 {
-	if (pin < 0 || pin > 32) return -1;
-	return READ_BIT(GPLEV_REG(pin));
+  if(debugging==TRUE)
+    {
+      if (pin < 0 || pin > 32) return FALSE;
+      printf("Receiving bit from pin at address:0x%08X...\n",GPLEV_REG(pin));
+      return TRUE;
+    }
+  if (pin < 0 || pin > 32) return -1;
+  return READ_BIT(GPLEV_REG(pin));
 
 }
