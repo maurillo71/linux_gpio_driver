@@ -9,16 +9,16 @@
 #define GPIO_LIB_H_
 
 typedef enum
-{
-	FALSE = 0, TRUE
-
-} BOOL;
+  {
+    FALSE = 0, 
+    TRUE
+  } BOOL;
 
 typedef enum
-{
-	READ_OPERATION = 0, 
-	WRITE_OPERATION
-} ACCEPTED_OPERATIONS;
+  {
+    READ_OPERATION = 0, 
+    WRITE_OPERATION
+  } ACCEPTED_OPERATIONS;
 
 typedef enum
   {
@@ -26,11 +26,43 @@ typedef enum
     OUTPUT_MODE=0x01
   }PIN_MODE;
 
+typedef enum
+  {
+    GPIO2=3,
+    GPIO3=5,
+    GPIO4=7,
+    GPIO14=8,
+    GPIO15=10,
+    GPIO17=11,
+    GPIO18=12,
+    GPIO27=13,
+    GPIO22=15,
+    GPIO23=16,
+    GPIO24=18,
+    GPIO10=19,
+    GPIO9=21,
+    GPIO25=22,
+    GPIO11=23,
+    GPIO8=24,
+    GPIO7=26,
+    GPIO5=29,
+    GPIO6=31,
+    GPIO12=32,
+    GPIO13=33,
+    GPIO19=35,
+    GPIO16=36,
+    GPIO26=37,
+    GPIO20=38,
+    GPIO21=40
+    //we're not added ID_SD & ID_SC
+  }DEVICE_PINS;
+
+
 typedef struct _gpio_ioctl_parameters
 {
-	unsigned address;
-	unsigned write_value;
-	unsigned read_value;
+  unsigned address;
+  unsigned write_value;
+  unsigned read_value;
 } gpio_ioctl;
 
 
@@ -95,21 +127,21 @@ int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 extern "C"
 {
 #endif
-extern void enable_debugging(BOOL state);
-extern BOOL init_device();
-
-extern BOOL close_device();
-
-extern BOOL set_pin_mode(uint8_t pin,PIN_MODE mode);
-
-extern BOOL send_bit(uint8_t pin, uint8_t value);
-
-extern uint8_t receive_bit(uint8_t pin);
-
-extern BOOL write_data(uint8_t pin, uint32_t value);
-
-extern uint32_t read_data(uint8_t pin);
-
+  extern void enable_debugging(BOOL state);
+  extern BOOL init_device();
+  
+  extern BOOL close_device();
+  
+  extern BOOL set_pin_mode(DEVICE_PINS pin,PIN_MODE mode);
+  
+  extern BOOL send_bit(DEVICE_PINS pin, uint8_t value);
+  
+  extern uint8_t receive_bit(DEVICE_PINS pin);
+  
+  extern BOOL write_data(DEVICE_PINS pin, uint32_t value);//will accept function as parameter, function that will map data to binary value
+  
+  extern uint32_t read_data(DEVICE_PINS pin);//will accept function as parameter, function that will map binary to data
+  
 #ifdef __cplusplus
 }
 #endif
