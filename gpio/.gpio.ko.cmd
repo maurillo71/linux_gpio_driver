@@ -1,1 +1,0 @@
-cmd_/home/mihai/Development/c/drivers/gpio/gpio.ko := ld -r -m elf_i386 -T /usr/src/linux-headers-3.2.0-4-common/scripts/module-common.lds --build-id  -o /home/mihai/Development/c/drivers/gpio/gpio.ko /home/mihai/Development/c/drivers/gpio/gpio.o /home/mihai/Development/c/drivers/gpio/gpio.mod.o
