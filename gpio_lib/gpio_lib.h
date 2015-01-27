@@ -53,8 +53,9 @@ typedef enum
     GPIO16=36,
     GPIO26=37,
     GPIO20=38,
-    GPIO21=40
-    //we're not added ID_SD & ID_SC
+    GPIO21=40,
+    ID_SD=27,
+    ID_SC=28
   }DEVICE_PINS;
 
 
@@ -106,6 +107,7 @@ typedef struct _gpio_ioctl_parameters
 #define GPPUD                        0x0094 ///< GPIO Pin Pull-up/down Enable
 #define GPPUDCLK0                    0x0098 ///< GPIO Pin Pull-up/down Enable Clock 0
 #define GPPUDCLK1                    0x009c ///< GPIO Pin Pull-up/down Enable Clock 1
+
 int8_t device_status;
 
 BOOL debugging=FALSE;
@@ -137,10 +139,22 @@ extern "C"
   extern BOOL send_bit(DEVICE_PINS pin, uint8_t value);
   
   extern uint8_t receive_bit(DEVICE_PINS pin);
-  
+
   extern BOOL write_data(DEVICE_PINS pin, uint32_t value);//will accept function as parameter, function that will map data to binary value
   
   extern uint32_t read_data(DEVICE_PINS pin);//will accept function as parameter, function that will map binary to data
+
+
+  //READ & WRITE ON ADDRESS OF THE PERIFERIC
+  extern uint32_t periferic_read(volatile uint32_t* address,BOOL barrier);
+
+  extern void periferic_write(volatile uint32_t *address, uint32_t value,BOOL barrier);
+
+  extern void periferic_set_bits(volatile uint32_t *address, uint32_t value,uint32_t mask);
+
+
+
+
   
 #ifdef __cplusplus
 }

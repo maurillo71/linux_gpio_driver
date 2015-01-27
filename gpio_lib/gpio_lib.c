@@ -103,7 +103,7 @@ extern BOOL send_bit(DEVICE_PINS pin, uint8_t value)
 	printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
       else
 	printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
-      return TRUE;
+      return 0;
     }
   
   if (value)
@@ -118,7 +118,7 @@ extern uint8_t receive_bit(DEVICE_PINS pin)
   if(debugging==TRUE)
     {
       printf("Receiving bit from pin at address:0x%08X...\n",GPLEV_REG(pin));
-      return TRUE;
+      return 0;
     }
   
   
@@ -147,8 +147,56 @@ extern uint32_t read_data(DEVICE_PINS pin)
   if(debugging==TRUE)
     {
       printf("Receiving bit from pin at address:0x%08X...\n",GPLEV_REG(pin));
-      return TRUE;
+      return 0;
     }
   return READ_BIT(GPLEV_REG(pin));
   
+}
+
+
+extern uint32_t periferic_read(volatile uint32_t* address,BOOL barrier)
+{
+  if(debugging==TRUE)
+    {
+ 
+      printf("Read from periferic at address:0x%08X...\n",(unsigned)address);
+      return 0;
+ 
+    }
+  if(barrier==TRUE)
+    {
+      uint32_t returned_value=*address;
+      *address;
+      return returned_value;
+    }
+  else
+    {
+      return *address;
+    }
+  
+}
+
+extern void periferic_write(volatile uint32_t *address, uint32_t value,BOOL barrier)
+{
+  if(debugging==TRUE)
+    {
+ 
+      printf("Write value %d at address:0x%08X...\n",value,(unsigned)address);
+    }
+  if(barrier==TRUE)
+    {
+      *address=value;
+      *address=value;
+    }
+  else
+    {
+      *address=value;
+    }
+}
+
+extern void periferic_set_bits(volatile uint32_t *address, uint32_t value,uint32_t mask)
+{
+  uint32_t val=periferic_read(address,TRUE);
+  value=(val & ~mask) | (value & mask);
+  periferic_write(address,val,TRUE);
 }
