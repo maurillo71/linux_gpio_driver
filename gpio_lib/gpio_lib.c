@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 #include "gpio_lib.h"
 
 extern void enable_debugging(BOOL state)
@@ -121,8 +122,6 @@ extern uint8_t receive_bit(DEVICE_PINS pin)
       return 0;
     }
   
-  
-  
   uint32_t value = READ_BIT(GPLEV_REG(pin));
   if (value == -1)
     {
@@ -131,28 +130,6 @@ extern uint8_t receive_bit(DEVICE_PINS pin)
   return SHIFTED_VALUE(pin,value);
   
 }
-
-extern BOOL write_data(DEVICE_PINS pin, uint32_t value)
-{
-  if(debugging==TRUE)
-    {
-      printf("Sending bit 0x%08X on pin at address:0x%08X...\n",SHIFTED_VALUE(pin,value),GPSET_REG(pin));
-      return TRUE;
-    }
-  return (WRITE_BIT(GPSET_REG(pin),value) == -1) ? FALSE : TRUE;
-}
-
-extern uint32_t read_data(DEVICE_PINS pin)
-{
-  if(debugging==TRUE)
-    {
-      printf("Receiving bit from pin at address:0x%08X...\n",GPLEV_REG(pin));
-      return 0;
-    }
-  return READ_BIT(GPLEV_REG(pin));
-  
-}
-
 
 extern uint32_t periferic_read(volatile uint32_t* address,BOOL barrier)
 {
@@ -200,3 +177,81 @@ extern void periferic_set_bits(volatile uint32_t *address, uint32_t value,uint32
   value=(val & ~mask) | (value & mask);
   periferic_write(address,val,TRUE);
 }
+
+extern void delay(uint16_t millis)
+{
+  struct timespec delay;
+  delay.tv_sec=(time_t)(millis/1000.0);
+  delay.tv_nsec=(uint32_t)(millis*1000000);
+  nanosleep(&delay,NULL);
+}
+
+
+extern uint32_t timer(void)
+{
+  volatile uint32_t high,low;
+  uint32_t st; 
+  high=READ_BIT(TIMER_HI);
+  low=READ_BIT(TIMER_LO);
+  st=READ_BIT(TIMER_HI);
+  st<<=32;
+  if(st==high)
+    {
+      st+=low;
+    }
+  else
+    {
+      st+=READ_BIT(TIMER_LO);
+    }
+  return st;
+}
+
+extern void udelay(uint32_t micros)
+{
+  uint32_t offset;
+  offset=timer();
+  while(timer()<(offset+micros));
+
+}
+
+extern STATUS event_detect_status(DEVICE_PINS pin)
+{
+  uint8_t value=READ_BIT(GPEDS_REG(pin));
+  return SHIFTED_VALUE(pin,value);
+}
+
+extern BOOL async_falling_edge_detect(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPAFEN_REG(pin),SHIFTED_VALUE(pin,value)) == -1) ?FALSE : TRUE;
+}
+
+extern BOOL async_rising_edge_detect(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPAREN_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}
+
+
+
+extern BOOL rising_edge_detect(DEVICE_PINS pin, uint8_t value)
+{
+  return (WRITE_BIT(GPREN_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}
+
+extern BOOL falling_edge_detect(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPFEN_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}
+
+extern BOOL high_detect(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPHEN_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}
+
+extern BOOL low_detect(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPLEN_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}
+
+
+
+

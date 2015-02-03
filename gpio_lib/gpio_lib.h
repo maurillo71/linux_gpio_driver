@@ -13,6 +13,11 @@ typedef enum
     FALSE = 0, 
     TRUE
   } BOOL;
+typedef enum
+  {
+    LOW=0x0,
+    HIGH=0x01
+  }STATUS;
 
 typedef enum
   {
@@ -22,8 +27,14 @@ typedef enum
 
 typedef enum
   {
-    INPUT_MODE=0x00,
-    OUTPUT_MODE=0x01
+    INPUT_MODE=0x000,
+    OUTPUT_MODE=0x001,
+    ALT_FUNCTION_0=0x100,
+    ALT_FUNCTION_1=0x101,
+    ALT_FUNCTION_2=0x110,
+    ALT_FUNCTION_3=0x111,
+    ALT_FUNCTION_4=0x011,
+    ALT_FUNCTION_5=0x010
   }PIN_MODE;
 
 typedef enum
@@ -108,6 +119,9 @@ typedef struct _gpio_ioctl_parameters
 #define GPPUDCLK0                    0x0098 ///< GPIO Pin Pull-up/down Enable Clock 0
 #define GPPUDCLK1                    0x009c ///< GPIO Pin Pull-up/down Enable Clock 1
 
+#define TIMER_LO 0x00003004
+#define TIMER_HI 0x00003008
+
 int8_t device_status;
 
 BOOL debugging=FALSE;
@@ -115,15 +129,34 @@ BOOL debugging=FALSE;
 int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 
 #define GPSET_REG(P)				(GPSET0+((GPSET1-GPSET0)*((P)/32)))
+
+#define GPLEV_REG(P)				(GPLEV0+((GPLEV1-GPLEV0)*((P)/32)))
+
 #define GPCLR_REG(P)				(GPCLR0+((GPCLR1-GPCLR0)*((P)/32)))
+
 #define GPSEL_REG(P)	                        (GPFSEL0 + ((GPFSEL1 - GPFSEL0) * ((P) / 10)))
+
+#define GPAFEN_REG(P)                           (GPAFEN0+((GPAFEN1-GPAFEN0)*((P)/32)))
+
+#define GPAREN_REG(P)                           (GPAREN0+((GPAREN1-GPAREN0)*((P)/32)))
+
+#define GPEDS_REG(P)                            (GPEDS0+((GPEDS1-GPEDS0)*((P)/32)))
+
+#define GPREN_REG(P)                            (GPREN0+((GPREN1-GPREN0)*((P)/32)))
+
+#define GPFEN_REG(P)                            (GPFEN0+((GPFEN1-GPFEN0)*((P)/32)))
+
+#define GPHEN_REG(P)                            (GPHEN0+((GPHEN1-GPHEN0)*((P)/32)))
+
+#define GPLEN_REG(P)                            (GPLEN0+((GPLEN1-GPLEN0)*((P)/32)))
+
 #define SHIFTED_VALUE(P,V) 	((V)?(1<<((P)%32)):0)
 #define SHIFTED_SELECT_VALUE(P,V) ((V)<<(((P)%10)*3))
 
 #define READ_BIT(A)		control_device(READ_OPERATION,(GPIO_BASE | (A)),0)
-#define	WRITE_BIT(A,V)	control_device(WRITE_OPERATION,(GPIO_BASE| (A)),V)
+#define	WRITE_BIT(A,V)	        control_device(WRITE_OPERATION,(GPIO_BASE| (A)),V)
 
-#define GPLEV_REG(P)				(GPLEV0+((GPLEV1-GPLEV0)*((P)/32)))
+
 
 #ifdef __cplusplus
 extern "C"
@@ -140,11 +173,6 @@ extern "C"
   
   extern uint8_t receive_bit(DEVICE_PINS pin);
 
-  extern BOOL write_data(DEVICE_PINS pin, uint32_t value);//will accept function as parameter, function that will map data to binary value
-  
-  extern uint32_t read_data(DEVICE_PINS pin);//will accept function as parameter, function that will map binary to data
-
-
   //READ & WRITE ON ADDRESS OF THE PERIFERIC
   extern uint32_t periferic_read(volatile uint32_t* address,BOOL barrier);
 
@@ -153,8 +181,23 @@ extern "C"
   extern void periferic_set_bits(volatile uint32_t *address, uint32_t value,uint32_t mask);
 
 
+  //delays
+  extern void delay(uint16_t millis);
+  extern uint32_t timer(void);
+  extern void udelay(uint32_t micros);
 
+  //events
 
+  extern BOOL async_falling_edge_detect(DEVICE_PINS pin,uint8_t value);
+  extern BOOL async_rising_edge_detect(DEVICE_PINS pin,uint8_t value);
+  
+  extern BOOL rising_edge_detect(DEVICE_PINS pin, uint8_t value);
+  extern BOOL falling_edge_detect(DEVICE_PINS pin,uint8_t value);
+
+  extern BOOL high_detect(DEVICE_PINS pin,uint8_t value);
+  extern BOOL low_detect(DEVICE_PINS pin,uint8_t value);
+
+  extern STATUS event_detect_status(DEVICE_PINS pin);
   
 #ifdef __cplusplus
 }
