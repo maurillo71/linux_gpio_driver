@@ -255,3 +255,7 @@ extern BOOL low_detect(DEVICE_PINS pin,uint8_t value)
 
 
 
+extern BOOL pull_ud_clk(DEVICE_PINS pin,uint8_t value)
+{
+  return (WRITE_BIT(GPPUDCLK_REG(pin),SHIFTED_VALUE(pin,value))==-1)?FALSE:TRUE;
+}

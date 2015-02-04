@@ -150,6 +150,8 @@ int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 
 #define GPLEN_REG(P)                            (GPLEN0+((GPLEN1-GPLEN0)*((P)/32)))
 
+#define GPPUDCLK_REG(P)                         (GPPUDCLK0+((GPPUDCLK1-GPPUDCLK0)*((P)/32)))
+
 #define SHIFTED_VALUE(P,V) 	((V)?(1<<((P)%32)):0)
 #define SHIFTED_SELECT_VALUE(P,V) ((V)<<(((P)%10)*3))
 
@@ -188,8 +190,7 @@ extern "C"
 
   //events
 
-  extern BOOL async_falling_edge_detect(DEVICE_PINS pin,uint8_t value);
-  extern BOOL async_rising_edge_detect(DEVICE_PINS pin,uint8_t value);
+  
   
   extern BOOL rising_edge_detect(DEVICE_PINS pin, uint8_t value);
   extern BOOL falling_edge_detect(DEVICE_PINS pin,uint8_t value);
@@ -197,7 +198,12 @@ extern "C"
   extern BOOL high_detect(DEVICE_PINS pin,uint8_t value);
   extern BOOL low_detect(DEVICE_PINS pin,uint8_t value);
 
+  extern BOOL async_falling_edge_detect(DEVICE_PINS pin,uint8_t value);
+  extern BOOL async_rising_edge_detect(DEVICE_PINS pin,uint8_t value);
+
   extern STATUS event_detect_status(DEVICE_PINS pin);
+
+  extern BOOL pull_ud_clk(DEVICE_PINS pin,uint8_t value);
   
 #ifdef __cplusplus
 }
