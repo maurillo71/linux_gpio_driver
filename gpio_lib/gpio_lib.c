@@ -167,7 +167,7 @@ extern void udelay(uint32_t micros)
 
 }
 
-extern STATUS event_detect_status(DEVICE_PINS pin)
+extern uint8_t event_detect_status(DEVICE_PINS pin)
 {
   uint8_t value=READ_BIT(GPEDS_REG(pin));
   return SHIFTED_VALUE(pin,value);

@@ -1,42 +1,52 @@
-/*
- * gpio_lib.h
- *
- *  Created on: Dec 30, 2014
- *      Author: mihai
- */
+/** 
+\mainpage  Library that can be used in C/C++ for controlling Raspberry Pi B+ pins via Linux Device Driver
 
+// <p>The idea of this project was to offer a fast method to controll the pins from C code via driver, to offer a fast and easy to use shared library.</p>
+// <p>Author: Mihai Seba <<b>23ars</b>></p>
+// <p>Version: 1.0</p>
+// <p>License: GPL</p>
+// @see https://github.com/23ars/linux_gpio_driver/wiki
+*/
 #ifndef GPIO_LIB_H_
 #define GPIO_LIB_H_
 
+/// \defgroup datatypes Library defined data types
+/// These data types allow you to control/interpret the parameters and return values of functions
+/// @{
+/// Defines the BOOL type. By convention, FALSE means 0 and TRUE means 1.
 typedef enum
   {
     FALSE = 0, 
     TRUE
   } BOOL;
-typedef enum
-  {
-    LOW=0x0,
-    HIGH=0x01
-  }STATUS;
 
+/// Defines the operations accepted by the defined ioctl functions. These types are use internally by the function that control the GPIO driver
 typedef enum
   {
-    READ_OPERATION = 0, 
-    WRITE_OPERATION
+    READ_OPERATION = 0, ///< <b>Read operation</b>
+    WRITE_OPERATION///< <b>Write operations</b>
   } ACCEPTED_OPERATIONS;
 
+/// Defines the BCM2835 supported modes.
 typedef enum
   {
-    INPUT_MODE=0x000,
-    OUTPUT_MODE=0x001,
-    ALT_FUNCTION_0=0x100,
-    ALT_FUNCTION_1=0x101,
-    ALT_FUNCTION_2=0x110,
-    ALT_FUNCTION_3=0x111,
-    ALT_FUNCTION_4=0x011,
-    ALT_FUNCTION_5=0x010
+    INPUT_MODE=0x000,///< <b>GPIO input mode</b>
+    OUTPUT_MODE=0x001,///< <b>GPIO output mode</b>
+    ALT_FUNCTION_0=0x100,///< <b>alternate function 0</b>
+    ALT_FUNCTION_1=0x101,///< <b>alternate function 1</b>
+    ALT_FUNCTION_2=0x110,///< <b>alternate function 2</b>
+    ALT_FUNCTION_3=0x111,///< <b>alternate function 3</b>
+    ALT_FUNCTION_4=0x011,///< <b>alternate function 4</b>
+    ALT_FUNCTION_5=0x010///< <b>alternate function 5</b>
   }PIN_MODE;
 
+/// Define the logical HIGH value, 1
+#define HIGH 0x1///< HIGH Value
+
+/// Define the logical LOW value, 0
+#define LOW 0x0///< LOW Value
+
+/// Defines the DEVICE_PINS type, type that map the available pins on Raspberry Pi B+
 typedef enum
   {
     GPIO2=3,
@@ -70,6 +80,9 @@ typedef enum
   }DEVICE_PINS;
 
 
+
+/// @} //end of datatypes
+
 typedef struct _gpio_ioctl_parameters
 {
   unsigned address;
@@ -83,8 +96,7 @@ typedef struct _gpio_ioctl_parameters
 #define _IOCTL_WRITE _IOW(_IOCTL_MAGIC,1,gpio_ioctl*)
 #define _IOCTL_READ  _IOR(_IOCTL_MAGIC,2,gpio_ioctl*)
 
-#define HIGH 0x1
-#define LOW 0x0
+
 
 #define KERNEL_ADDRESS               0xF2000000
 #define GPIO_BASE               (KERNEL_ADDRESS + 0x200000)
@@ -128,6 +140,8 @@ BOOL debugging=FALSE;
 
 int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 
+uint32_t timer(void);
+
 #define GPSET_REG(P)				(GPSET0+((GPSET1-GPSET0)*((P)/32)))
 
 #define GPLEV_REG(P)				(GPLEV0+((GPLEV1-GPLEV0)*((P)/32)))
@@ -164,40 +178,102 @@ int32_t control_device(ACCEPTED_OPERATIONS, uint32_t, uint32_t);
 extern "C"
 {
 #endif
+  /// \defgroup init Device Control functions
+  /// These functions are used to control the GPIO device driver and the debugging mode of the library.
+  /// @{
+ 
+  /// Enable debugging mode of the library. In this mode values are not written on the peripherals. By default debugging mode is disabled.
+  /// \param[in] state The state of the debugging mode, enable/disabled. Value is of type BOOL, TRUE or FALSE, meaning enabled, respectively disabled.
   extern void enable_debugging(BOOL state);
+
+  /// Device initialization function. This function must be called before any operations on GPIO pins.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL init_device();
-  
+
+  ///Device closing function. This function must be called after all operations on GPIO pins are done.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL close_device();
+
+  /// @} //end of init
+
   
+  /// \defgroup gpiocontrol GPIO Control
+  /// Functions from this group are used to control the pins, by writing different values to the BCM2835 registers.
+  /// @{
+ 
+  /// This function is used to set the pin mode, output,input or alternate function.
+  /// param[in] pin Represents the pin choosed for a specific operation.
+  /// param[in] mode Represents the mode choosed for pin.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL set_pin_mode(DEVICE_PINS pin,PIN_MODE mode);
-  
+
+  /// Function used to send a bit on the choosed pin.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL send_bit(DEVICE_PINS pin, uint8_t value);
-  
+
+  /// Function used to read a bit from the choosed pin.
+  /// param[in] pin Represents the pin choosed for a specific operation.
+  /// \return read value
   extern uint8_t receive_bit(DEVICE_PINS pin);
 
-
-  //delays
+  /// Delay function. Used to delay a specified number of milliseconds.
+  /// param[in] millis Number of millis to sleep.
   extern void delay(uint16_t millis);
-  extern uint32_t timer(void);
+
+  /// Udelay function. Used to delay a specified number of microseconds.
+  /// param[in] micros Number of microseconds to sleep.
   extern void udelay(uint32_t micros);
 
-  //events
-
-  
-  
+  /// Function used to set-up rising edge detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL rising_edge_detect(DEVICE_PINS pin, uint8_t value);
+
+  /// Function used to set-up falling edge detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL falling_edge_detect(DEVICE_PINS pin,uint8_t value);
 
+  /// Function used to set-up high detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL high_detect(DEVICE_PINS pin,uint8_t value);
+
+  /// Function used to set-up low detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL low_detect(DEVICE_PINS pin,uint8_t value);
 
+  /// Function used to set-up asynchronous falling edge detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL async_falling_edge_detect(DEVICE_PINS pin,uint8_t value);
+
+  /// Function used to set-up asynchronous rising edge detection.
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL async_rising_edge_detect(DEVICE_PINS pin,uint8_t value);
 
-  extern STATUS event_detect_status(DEVICE_PINS pin);
+  /// Function used to set-up event detection
+  /// \param[in] pin Represent the mapped pin.
+  /// \return HIGH or LOW
+  extern uint8_t event_detect_status(DEVICE_PINS pin);
 
+  ///Function used to enable pull up/down
+  /// \param[in] pin Represent the mapped pin.
+  /// \param[in] value Represent the value that will be set, 0 or 1.
+  /// \return TRUE if successful, FALSE otherwise. 
   extern BOOL pull_ud_clk(DEVICE_PINS pin,uint8_t value);
   
+  /// @} //end of gpiocontrol
 #ifdef __cplusplus
 }
 #endif

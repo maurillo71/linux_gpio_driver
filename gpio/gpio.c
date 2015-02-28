@@ -218,7 +218,3 @@ static void __exit gpio_exit(void)
 module_init(gpio_init);
 module_exit(gpio_exit);
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR(DRIVER_AUTHOR);
-MODULE_DESCRIPTION(DRIVER_DESC);
-MODULE_SUPPORTED_DEVICE("device")
