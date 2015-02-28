@@ -175,13 +175,6 @@ extern "C"
   
   extern uint8_t receive_bit(DEVICE_PINS pin);
 
-  //READ & WRITE ON ADDRESS OF THE PERIFERIC
-  extern uint32_t periferic_read(volatile uint32_t* address,BOOL barrier);
-
-  extern void periferic_write(volatile uint32_t *address, uint32_t value,BOOL barrier);
-
-  extern void periferic_set_bits(volatile uint32_t *address, uint32_t value,uint32_t mask);
-
 
   //delays
   extern void delay(uint16_t millis);
